@@ -8,7 +8,7 @@
 import { ref } from 'vue';
 
 
-const title = ref('title')
+const title = ref('title deploy test 1')
 
 </script>
 
