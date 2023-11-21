@@ -1,8 +1,10 @@
 <template>
-  <Graph />
+  <div style="background-color: white;">
+    <LineChart />
+  </div>
 </template>
 
 <script setup lang="ts">
-import Graph from './components/Graph.vue';
+import LineChart from './components/LineChart.vue';
 
 </script>
