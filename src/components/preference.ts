@@ -6,8 +6,8 @@ export const usePreferenceStore = defineStore('preference', () => {
 
     const STORE_NAME = 'g-log-chart-sample-preference'
 
-    const graphType = ref<'line' | 'box'>('line')
-    const dataType = ref<'sample' | 'custom'>('sample')
+    const graphType = ref<'line' | 'box' | 'linebox'>('line')
+    const dataType = ref<'random' | 'custom'>('random')
 
     const saveToLocalStorage = () => {
         localStorage.setItem(STORE_NAME, JSON.stringify({

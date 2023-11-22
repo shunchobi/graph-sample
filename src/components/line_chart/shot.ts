@@ -14,9 +14,6 @@ export class FlyingDistance {
     readonly distance: number;
 
     constructor(_distance: number) {
-        if(_distance < 0){
-            throw Error('distance must be more than 0')
-        }
         this.distance = _distance
     }
 }

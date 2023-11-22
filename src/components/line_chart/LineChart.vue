@@ -19,24 +19,40 @@
         </g>
 
 
-        <!-- shot dots -->
-        <template v-for="shot in shots" :key="shot">
-          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.flyingDidtance.distance)" r="3"
-            fill="red" />
-        </template>
+
 
         <!-- avarage lines -->
-        <!-- TODO -->
-        <!-- lineで今の実装だと試打していないクラブの飛距離を保管できないから、pathで次に存在するshotのx, y座標を求めて線を引く-->
-        <template v-for="(avarageShot, avarageShotIndex) in avarageFlyingDistanceShots" :key="avarageShotIndex">
+        <!-- TODO 飛距離データがない場合の保管に対応する -->
+        <template v-for="(shot, avarageShotIndex) in flyingDidtanceSummary" :key="shot.clubIndex">
           <path stroke="#ccc"
             :d="`
-            M 
-            ${clubIndexToX(clubIndex(avarageShot.club.clubType))},
-            ${y(avarageShot.flyingDidtance.distance)} 
+            M ${clubIndexToX(clubIndex(shot.club.clubType))},${y(shot.average)} 
             L 
-            ${avarageFlyingDistanceShots.length - 1 <= avarageShotIndex ? clubIndexToX(clubIndex(avarageShot.club.clubType)) : clubIndexToX(clubIndex(avarageFlyingDistanceShots[avarageShotIndex + 1].club.clubType))},
-            ${avarageFlyingDistanceShots.length - 1 <= avarageShotIndex ? y(avarageShot.flyingDidtance.distance) : y(avarageFlyingDistanceShots[avarageShotIndex + 1].flyingDidtance.distance)}`" />
+                                                            ${flyingDidtanceSummary.length - 1 <= avarageShotIndex ? clubIndexToX(clubIndex(shot.club.clubType)) : clubIndexToX(clubIndex(flyingDidtanceSummary[avarageShotIndex + 1].club.clubType))},
+                                                            ${flyingDidtanceSummary.length - 1 <= avarageShotIndex ? y(shot.average) : y(flyingDidtanceSummary[avarageShotIndex + 1].average)}`" />
+        </template>
+
+        <!-- box plot -->
+        <!-- クラブの飛距離の最大値、最小値 -->
+        <template v-for="shot in flyingDidtanceSummary" :key="shot.clubIndex">
+          <template v-if="graphType == 'box' || graphType == 'linebox' ">
+            <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)" :y2="y(shot.min!)" stroke="#000"></line>
+            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex) + 2" :y2="y(shot.min!)" stroke="#000"></line>
+            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex) + 2" :y2="y(shot.max!)" stroke="#000"></line>
+            <rect 
+              :x="clubIndexToX(shot.clubIndex) - 5" 
+              :y="y(shot.q75!)"
+              :height="shot.q75! - shot.q25!"
+              width="10" 
+              stroke="#000"/>
+          </template>
+        </template>
+
+
+        <!-- distance dots -->
+        <template v-if="graphType == 'line'|| graphType == 'linebox' " v-for="shot in shots" :key="shot">
+          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.flyingDidtance.distance)" r="2"
+            fill="red" />
         </template>
 
 
@@ -66,24 +82,38 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import _ from 'lodash'
-import { Club, Clubs, ClubTypes, FlyingDistance, Shot } from './shot'
+import { Clubs, ClubTypes, Shot } from './shot'
 import * as d3 from 'd3'
 
 const props = defineProps<{
   shots: Shot[]
+  graphType: 'line' | 'box' | 'linebox'
 }>()
 
 
 // 各クラブの複数の飛距離の平均のShot[]
-const avarageFlyingDistanceShots = computed(() => {
+const flyingDidtanceSummary = computed(() => {
   const groupByClubType = _.groupBy(props.shots, shot => shot.club.clubType)
-  return _.map(groupByClubType, shots => {
-    const avarageFlyingDistance = _.meanBy(shots, shot => shot.flyingDidtance.distance)
-    const shotTime = new Date()
-    const club = new Club({ type: shots[0].club.clubType as ClubTypes, name: undefined })
-    const flyingDistance = new FlyingDistance(avarageFlyingDistance)
-    return new Shot({ shotTime: shotTime, club: club, flyingDistance: flyingDistance })
+  const summaries = _.map(groupByClubType, shots => {
+    const distances = _.map(shots, shot => shot.flyingDidtance.distance)
+
+    const average = _.mean(distances)
+    const min = d3.min(distances)
+    const max = d3.max(distances)
+    const q25 = d3.quantile(distances, 0.25)
+    const q75 = d3.quantile(distances, 0.75)
+
+    return {
+      clubIndex: clubIndex(shots[0].club.clubType),
+      club: shots[0].club,
+      average,
+      min,
+      max,
+      q25,
+      q75,
+    }
   })
+  return _.sortBy(summaries, 'clubIndex')
 })
 
 
@@ -113,11 +143,11 @@ const shotDistanceScales = computed(() => {
 
 // 素直にindexを渡すと、0番目のクラブがY軸と重なるためこの関数で調整している
 const clubIndexToX = (index: number): number => {
-  return x(index + 1)
+  return x.value(index + 1)
 }
 
-const x = d3.scaleLinear([0, _.keys(Clubs).length], [40, 420]);
-const y = d3.scaleLinear([0, maxHozyosenValue.value], [376.5, 20]);
+const x = computed(() => d3.scaleLinear([0, _.keys(Clubs).length], [40, 420]))
+const y = computed(() => d3.scaleLinear([0, maxHozyosenValue.value], [376.5, 20]));
 
 
 const clubs = computed(() => {
@@ -132,4 +162,4 @@ const clubIndex = (club: ClubTypes): number => {
 
 </script>
 
-<style scoped></style>./shot
+<style scoped></style>

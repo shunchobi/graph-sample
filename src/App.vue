@@ -4,17 +4,31 @@
     <label for="radio1"><span class="radio-title">折れ線</span></label>
     <input v-model="preferenceStore.graphType" type="radio" id="radio2" name="graphType" value="box">
     <label for="radio2"><span class="radio-title">箱ひげ</span></label>
+    <input v-model="preferenceStore.graphType" type="radio" id="radio3" name="graphType" value="linebox">
+    <label for="radio3"><span class="radio-title">箱ひげ折れ線</span></label>
   </div>
 
   <div style="margin-bottom: 30px;">
-    <input v-model="preferenceStore.dataType" type="radio" id="radio3" name="dataType" value="sample">
-    <label for="radio3"><span class="radio-title">サンプルデータ</span></label>
-    <input v-model="preferenceStore.dataType" type="radio" id="radio4" name="dataType" value="custom">
-    <label for="radio4"><span class="radio-title">入力データ</span></label>
+    <input v-model="preferenceStore.dataType" type="radio" id="radio4" name="dataType" value="random">
+    <label for="radio4"><span class="radio-title">サンプルデータ</span></label>
+    <input v-model="preferenceStore.dataType" type="radio" id="radio5" name="dataType" value="custom">
+    <label for="radio5"><span class="radio-title">入力データ</span></label>
+  </div>
+
+  <div v-if="preferenceStore.dataType == 'custom'">
+    <select v-model="selectedHeader" style="margin-bottom: 10px;">
+      <template v-for="h in hearders" :key="h">
+       <option>{{ h }}</option> 
+      </template>
+    </select>
   </div>
 
   <div>
-    <LineChart :shots="shots" />
+    <LineChart :shots="shots" :graph-type="preferenceStore.graphType" />
+  </div>
+
+  <div v-if="preferenceStore.dataType == 'custom'" style="margin-top: 30px;">
+    <textarea style="width: 460px; height: 250px;" :value="sampleData"></textarea>
   </div>
 </template>
 
@@ -23,15 +37,68 @@ import LineChart from './components/line_chart/LineChart.vue';
 import _ from 'lodash'
 import { usePreferenceStore } from './components/preference'
 import { useSampleDataStore } from './components/sampleData'
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue'
+import { sampleData } from "./sampleData"
+import { csvParse } from './parser'
+import { Club, ClubTypes, FlyingDistance, Shot } from './components/line_chart/shot';
 
 const preferenceStore = usePreferenceStore()
 const sampleDataStore = useSampleDataStore()
 
+const csvDatas = ref<object[]>([])
+const csvSampleData = ref<Shot[]>([])
+const hearders = computed(() => _.keys(csvDatas.value[0] ?? {}))
+const selectedHeader = ref('Carry Flat - Length')
+
 const shots = computed(() => {
-  if (preferenceStore.dataType == 'sample') return sampleDataStore.shots
-  if (preferenceStore.dataType == 'custom') return []
+  if (preferenceStore.dataType == 'random') return sampleDataStore.shots
+  if (preferenceStore.dataType == 'custom') {
+    csvSampleData.value = getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
+    return csvSampleData.value
+  }
   return []
+})
+
+
+const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]) => {
+  const clubAndFlyingLength = _.map(datas, data => {
+    return {
+      'Club': _.get(data, 'Club'),
+      'value': _.get(data, selectedHeader.value),
+    }
+  })
+
+  return _.map(clubAndFlyingLength, data => {
+    const flyingDidtance = data['value']
+    const clubName = data['Club']
+        
+    const clubType = getClubType(clubName!)
+    const shotTime = new Date()
+    const club = new Club({ type: clubType, name: undefined })
+    const flyingDistance = new FlyingDistance(Math.floor(flyingDidtance!))
+    return new Shot({ shotTime: shotTime, club: club, flyingDistance: flyingDistance })
+  })
+}
+
+const getClubType = (club: string): ClubTypes => {
+  switch (club) {
+    case '7 iron':
+      return '7I';
+    case '60°':
+      return 'PW'
+    case '56°':
+      return 'SW'
+    case 'ドライバー':
+      return 'DR'
+    default:
+      throw Error(`CSVから取得したクラブの名前が予想されていない名前です。: ${club}` )
+  }
+}
+
+
+onMounted(() => {
+  csvDatas.value = csvParse(sampleData)
+  csvSampleData.value = getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
 })
 
 </script>

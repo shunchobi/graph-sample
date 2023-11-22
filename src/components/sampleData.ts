@@ -6,7 +6,7 @@ import { Club, ClubTypes, Clubs, FlyingDistance, Shot } from './line_chart/shot'
 export const useSampleDataStore = defineStore('sampleData', () => {
 
     const shots = computed(() => {
-        const shotedClubs = _.flatten(_.map(_.keys(Clubs), club => _.map(Array(3), _ => club)))
+        const shotedClubs = _.flatten(_.map(_.keys(Clubs), club => _.map(Array(10), _ => club)))
         return _.map(shotedClubs, (clubType, index) => {
             const shotTime = randomShotTime(index)
             const club = new Club({ type: clubType as ClubTypes, name: undefined })
