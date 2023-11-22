@@ -5,7 +5,7 @@
 
         <!-- leftline -->
         <g class="myYaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="end">
-          <line :x1="x(0)" :y1="y(0)" :x2="x(0)" :y2="y(maxHozyosenValue)" stroke="#000"></line>
+          <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(0)" :y2="y(maxHozyosenValue)" stroke="#000"></line>
 
           <template v-for="scale in shotDistanceScales" :key="scale">
             <line :x1="x(0)" :y1="y(scale)" :x2="x(_.keys(Clubs).length) + 5" :y2="y(scale)" stroke="#ccc"></line>
@@ -17,9 +17,6 @@
             </text>
           </template>
         </g>
-
-
-
 
         <!-- avarage lines -->
         <!-- TODO 飛距離データがない場合の保管に対応する -->
@@ -51,20 +48,20 @@
 
         <!-- distance dots -->
         <template v-if="graphType == 'line'|| graphType == 'linebox' " v-for="shot in shots" :key="shot">
-          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.flyingDidtance.distance)" r="2"
+          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.flyingDidtance.distance)" r="3"
             fill="red" />
         </template>
 
 
         <!-- underline -->
         <g class="myXaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="middle">
-          <line :x1="x(0)" :y1="y(0)" :x2="x(_.keys(Clubs).length)" :y2="y(0)" stroke="#000"></line>
+          <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(_.keys(Clubs).length)" :y2="y(minHozyosenValue)" stroke="#000"></line>
 
           <template v-for="(club, clubIndex) in clubs" :key="club">
 
-            <line :x1="clubIndexToX(clubIndex)" :y1="y(0)" :x2="clubIndexToX(clubIndex)" :y2="y(0) + 5" stroke="#000">
+            <line :x1="clubIndexToX(clubIndex)" :y1="y(minHozyosenValue)" :x2="clubIndexToX(clubIndex)" :y2="y(minHozyosenValue) + 5" stroke="#000">
             </line>
-            <text :x="clubIndexToX(clubIndex)" :y="y(0) + 5" text-anchor="middle" font="10px &quot;Arial&quot;"
+            <text :x="clubIndexToX(clubIndex)" :y="y(minHozyosenValue) + 5" text-anchor="middle" font="10px &quot;Arial&quot;"
               stroke="none" fill="#888888"
               style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); text-anchor: middle; font: 12px sans-serif;"
               font-size="12px" font-family="sans-serif" font-weight="normal" transform="matrix(1,0,0,1,0,9)">
@@ -88,6 +85,7 @@ import * as d3 from 'd3'
 const props = defineProps<{
   shots: Shot[]
   graphType: 'line' | 'box' | 'linebox'
+  fromZero: boolean
 }>()
 
 
@@ -121,12 +119,16 @@ const flyingDidtanceSummary = computed(() => {
  * Y軸の補助線に関する者たち
  */
 const maxHozyosen = 20
-const hozyosenSteps = [1, 5, 10, 50, 100, 500, 1000]
+const hozyosenSteps = [0.5, 1, 5, 10, 50, 100, 500, 1000]
 const hozyosenStep = computed(() => {
   const maxFlyingDistance = _.max(_.map(props.shots, shot => shot.flyingDidtance.distance))
-  if (!maxFlyingDistance) return 0
+  const minFlyingDistance = _.min(_.map(props.shots, shot => shot.flyingDidtance.distance))
 
-  const hozyosenStepIndex = _.findIndex(hozyosenSteps, step => step * maxHozyosen > maxFlyingDistance)
+  if (!maxFlyingDistance || !minFlyingDistance) return 0
+
+  const diff = maxFlyingDistance - minFlyingDistance
+
+  const hozyosenStepIndex = _.findIndex(hozyosenSteps, step => step * maxHozyosen > diff)
   return hozyosenSteps[hozyosenStepIndex]
 })
 const maxHozyosenValue = computed(() => {
@@ -135,8 +137,15 @@ const maxHozyosenValue = computed(() => {
 
   return (Math.floor(maxFlyingDistance / hozyosenStep.value) + 1) * hozyosenStep.value
 })
+const minHozyosenValue = computed(() => {
+  if(props.fromZero) return 0
+  const minFlyingDistance = _.min(_.map(props.shots, shot => shot.flyingDidtance.distance))
+  if (!minFlyingDistance) return 0
+
+  return (Math.floor(minFlyingDistance / hozyosenStep.value) - 1) * hozyosenStep.value
+})
 const shotDistanceScales = computed(() => {
-  return _.range(0, maxHozyosenValue.value + 1, hozyosenStep.value)
+  return _.range(minHozyosenValue.value, maxHozyosenValue.value + 1, hozyosenStep.value)
 })
 
 
@@ -147,7 +156,7 @@ const clubIndexToX = (index: number): number => {
 }
 
 const x = computed(() => d3.scaleLinear([0, _.keys(Clubs).length], [40, 420]))
-const y = computed(() => d3.scaleLinear([0, maxHozyosenValue.value], [376.5, 20]));
+const y = computed(() => d3.scaleLinear([minHozyosenValue.value, maxHozyosenValue.value], [376.5, 20]));
 
 
 const clubs = computed(() => {

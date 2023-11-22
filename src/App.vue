@@ -16,15 +16,25 @@
   </div>
 
   <div v-if="preferenceStore.dataType == 'custom'">
+    <label style="color: black; margin-right: 10px;">データの種類:</label>
     <select v-model="selectedHeader" style="margin-bottom: 10px;">
       <template v-for="h in hearders" :key="h">
-       <option>{{ h }}</option> 
+        <option>{{ h }}</option>
       </template>
     </select>
   </div>
 
+  
+  <div v-if="preferenceStore.dataType == 'custom'">
+    <label style="color: black; margin-right: 10px;">データの起点L</label>
+    <select v-model="fromZero" style="margin-bottom: 10px;">
+      <option :value="true">ゼロ</option>
+      <option :value="false">自動</option>
+    </select>
+  </div>
+
   <div>
-    <LineChart :shots="shots" :graph-type="preferenceStore.graphType" />
+    <LineChart :shots="shots" :graph-type="preferenceStore.graphType" :from-zero="fromZero" />
   </div>
 
   <div v-if="preferenceStore.dataType == 'custom'" style="margin-top: 30px;">
@@ -49,6 +59,7 @@ const csvDatas = ref<object[]>([])
 const csvSampleData = ref<Shot[]>([])
 const hearders = computed(() => _.keys(csvDatas.value[0] ?? {}))
 const selectedHeader = ref('Carry Flat - Length')
+const fromZero = ref(false)
 
 const shots = computed(() => {
   if (preferenceStore.dataType == 'random') return sampleDataStore.shots
@@ -71,7 +82,7 @@ const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]) => {
   return _.map(clubAndFlyingLength, data => {
     const flyingDidtance = data['value']
     const clubName = data['Club']
-        
+
     const clubType = getClubType(clubName!)
     const shotTime = new Date()
     const club = new Club({ type: clubType, name: undefined })
@@ -91,7 +102,7 @@ const getClubType = (club: string): ClubTypes => {
     case 'ドライバー':
       return 'DR'
     default:
-      throw Error(`CSVから取得したクラブの名前が予想されていない名前です。: ${club}` )
+      throw Error(`CSVから取得したクラブの名前が予想されていない名前です。: ${club}`)
   }
 }
 
