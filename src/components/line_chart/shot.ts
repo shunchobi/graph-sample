@@ -1,3 +1,5 @@
+import { ClubCodes } from "./csvType";
+
 export class Shot {
     readonly shotTime: Date;
     readonly club: Club;
@@ -21,6 +23,8 @@ export class DataValue {
 
 
 export const Clubs = {
+    '7WG': undefined,
+    '9WG': undefined,
     'SW': undefined,
     'PW': undefined,
     '9I': undefined,
@@ -34,17 +38,16 @@ export const Clubs = {
     '5W': undefined,
     '2W': undefined,
     'DR': undefined,
-
 } as const
 
 export type ClubTypes = keyof typeof Clubs
 
 
 export class Club {
-    readonly clubType: ClubTypes;
+    readonly clubType: ClubCodes;
     readonly clubName: string | undefined;
 
-    constructor(club: { type: ClubTypes, name: string | undefined }) {
+    constructor(club: { type: ClubCodes, name: string | undefined }) {
         this.clubType = club.type
         this.clubName = club.name
     }

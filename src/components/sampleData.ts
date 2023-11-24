@@ -36,6 +36,8 @@ export const useSampleDataStore = defineStore('sampleData', () => {
         '3UT': () => _.random(180, 240),
         '2W': () => _.random(180, 250),
         'DR': () => _.random(200, 300),
+        '9WG':() =>  _.random(200, 300),
+        '7WG':() =>  _.random(200, 300),
     }
 
     return {

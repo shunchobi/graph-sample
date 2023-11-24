@@ -33,25 +33,36 @@
           )" stroke="#ccc" fill="none" />
         </template>
 
-        <!-- box plot -->
-        <template v-if="preferenceStore.showBox" v-for="shot in dataSummaries" :key="shot.clubIndex">
-          <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)"
-            :y2="y(shot.min!)" stroke="#000"></line>
-          <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex) + 2"
-            :y2="y(shot.min!)" stroke="#000"></line>
-          <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex) + 2"
-            :y2="y(shot.max!)" stroke="#000"></line>
-          <rect :x="clubIndexToX(shot.clubIndex) - 5" :y="y(shot.q75!)" :height="Math.abs(y(shot.q75!) - y(shot.q25!))"
-            width="10" stroke="#000" />
-        </template>
-
-
         <!-- dots -->
         <template v-if="preferenceStore.showDot" v-for="shot in shots" :key="shot">
           <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="red" />
           {{ shot.data.value }}
         </template>
 
+        <!-- box plot -->
+        <template v-if="preferenceStore.showBox" v-for="shot in dataSummaries" :key="shot.clubIndex">
+          <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)"
+            :y2="y(shot.q75!)" stroke="#000"></line>
+          <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex)"
+            :y2="y(shot.q25!)" stroke="#000"></line>
+
+          <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex) + 2"
+            :y2="y(shot.min!)" stroke="#000"></line>
+          <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex) + 2"
+            :y2="y(shot.max!)" stroke="#000"></line>
+          <rect :x="clubIndexToX(shot.clubIndex) - 5" :y="y(shot.q75!)" :height="Math.abs(y(shot.q75!) - y(shot.q25!))"
+            width="10" stroke="#000" fill="none" />
+        </template>
+
+
+        <!-- avarage dots -->
+        <template v-if="preferenceStore.showLine || preferenceStore.showBox" v-for="data in dataSummaries"
+          :key="data.clubIndex">
+          <line :x1="clubIndexToX(data.clubIndex) - 2" :y1="y(data.average) - 2" :x2="clubIndexToX(data.clubIndex) + 2"
+            :y2="y(data.average) + 2" stroke="black"></line>
+          <line :x1="clubIndexToX(data.clubIndex) + 2" :y1="y(data.average) - 2" :x2="clubIndexToX(data.clubIndex) - 2"
+            :y2="y(data.average) + 2" stroke="black"></line>
+        </template>
 
         <!-- underline -->
         <g class="myXaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="middle">
@@ -79,9 +90,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import _ from 'lodash'
-import { Clubs, ClubTypes, Shot } from './shot'
+import { Clubs, Shot } from './shot'
 import * as d3 from 'd3'
 import { usePreferenceStore } from '../preference';
+import { ClubCodes } from './csvType';
 
 const preferenceStore = usePreferenceStore()
 
@@ -191,7 +203,7 @@ const clubs = computed(() => {
   return _.keys(Clubs)
 })
 
-const clubIndex = (club: ClubTypes): number => {
+const clubIndex = (club: ClubCodes): number => {
   return _.findIndex(_.keys(Clubs), _club => _club == club)
 }
 

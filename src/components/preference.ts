@@ -10,15 +10,12 @@ export const usePreferenceStore = defineStore('preference', () => {
     const showDot = ref(true)
     const showBox = ref(false)
 
-    const dataType = ref<'random' | 'custom'>('random')
-
     const saveToLocalStorage = () => {
         console.log(showBox.value, showLine.value, showDot.value)
         localStorage.setItem(STORE_NAME, JSON.stringify({
             showLine: showLine.value,
             showDot: showDot.value,
             showBox: showBox.value,
-            dataType: dataType.value,
         }))
     }
 
@@ -28,7 +25,6 @@ export const usePreferenceStore = defineStore('preference', () => {
             showLine: showLine.value,
             showDot: showDot.value,
             showBox: showBox.value,
-            dataType: dataType.value,
         }
     }
 
@@ -37,14 +33,13 @@ export const usePreferenceStore = defineStore('preference', () => {
         showLine.value = preferences.showLine
         showDot.value = preferences.showDot
         showBox.value = preferences.showBox
-        dataType.value = preferences.dataType
     })
 
     watch(
         () => [
             showLine.value,
             showDot.value,
-            showBox.value, dataType.value,
+            showBox.value,
         ],
         () => saveToLocalStorage()
     )
@@ -53,6 +48,5 @@ export const usePreferenceStore = defineStore('preference', () => {
         showLine,
         showDot,
         showBox,
-        dataType,
     }
 });

@@ -1,0 +1,46 @@
+import _ from "lodash";
+import { Club, Driver, EightIron, EightUtility, EightWedge, EightWood, FiveIron, FiveUtility, FiveWedge, FiveWood, FourIron, FourUtility, FourWedge, FourWood, LobWedge, NineIron, NineUtility, NineWedge, NineWood, OneIron, OneUtility, Other, PitchingWedge, Putter, SandWedge, SevenIron, SevenWedge, SevenWood, SixIron, SixUtility, SixWedge, SixWood, ThreeIron, ThreeUtility, ThreeWood, TwoIron, TwoUtility, TwoWood } from "./club";
+import { ClubCodes } from "./csvType";
+
+
+export const clubs: {[K in ClubCodes]: Club} = {
+    'XXX': new  Other(),
+    'PT': new  Putter(),
+    '9WG': new  NineWedge(),
+    '8WG': new  EightWedge(),
+    '7WG': new  SevenWedge(),
+    '6WG': new  SixWedge(),
+    '5WG': new  FiveWedge(),
+    '4WG': new  FourWedge(),
+    'LW': new  LobWedge(),
+    'SW': new  SandWedge(),
+    'PW': new  PitchingWedge(),
+    '9I': new  NineIron(),
+    '8I': new  EightIron(),
+    '7I': new  SevenIron(),
+    '6I': new  SixIron(),
+    '5I': new  FiveIron(),
+    '4I': new  FourIron(),
+    '3I': new  ThreeIron(),
+    '2I': new  TwoIron(),
+    '1I': new  OneIron(),
+    '9UT': new  NineUtility(),
+    '8UT': new  EightUtility(),
+    '7UT': new  SevenWood(),
+    '6UT': new  SixUtility(),
+    '5UT': new  FiveUtility(),
+    '4UT': new  FourUtility(),
+    '3UT': new  ThreeUtility(),
+    '2UT': new  TwoUtility(),
+    '1UT': new  OneUtility(),
+    '9W': new  NineWood(),
+    '8W': new  EightWood(),
+    '7W': new  SevenWood(),
+    '6W': new  SixWood(),
+    '5W': new  FiveWood(),
+    '4W': new  FourWood(),
+    '3W': new  ThreeWood(),
+    '2W': new  TwoWood(),
+    'DR': new  Driver(),
+    
+}
