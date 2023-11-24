@@ -19,7 +19,8 @@
   <div>
     <label style="color: black; margin-right: 10px;">データの種類:</label>
     <select v-model="selectedHeader" :disabled="preferenceStore.dataType == 'random'" style="margin-bottom: 10px;">
-      <template v-for="h in hearders" :key="h">
+      <option v-if="preferenceStore.dataType == 'random'" selected>Carry Flat - Length</option>
+      <template v-else v-for="h in hearders" :key="h">
         <option>{{ h }}</option>
       </template>
     </select>
