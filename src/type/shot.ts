@@ -1,12 +1,18 @@
 import { Club } from "./club";
 
+
 export class Shot {
     readonly shotTime: Date;
     readonly club: Club;
     readonly data: DataValue;
     readonly unit: string;
 
-    constructor(shot: { shotTime: Date, club: Club, data: DataValue, unit: string, }) {
+    constructor(shot: {
+        readonly shotTime: Date,
+        readonly club: Club,
+        readonly data: DataValue,
+        readonly unit: string,
+    }) {
         this.shotTime = shot.shotTime
         this.club = shot.club
         this.data = shot.data
