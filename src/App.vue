@@ -42,7 +42,7 @@
   </div>
 
   <div v-if="preferenceStore.dataType == 'custom'" style="margin-top: 30px;">
-    <textarea style="width: 460px; height: 250px;" :value="sampleData"></textarea>
+    <textarea style="width: 460px; height: 250px;" v-model="csvText"></textarea>
   </div>
 </template>
 
@@ -51,7 +51,7 @@ import LineChart from './components/line_chart/LineChart.vue';
 import _ from 'lodash'
 import { usePreferenceStore } from './components/preference'
 import { useSampleDataStore } from './components/sampleData'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { sampleData } from "./sampleData"
 import { csvParse } from './parser'
 import { Club, ClubTypes, FlyingDistance, Shot } from './components/line_chart/shot';
@@ -59,8 +59,13 @@ import { Club, ClubTypes, FlyingDistance, Shot } from './components/line_chart/s
 const preferenceStore = usePreferenceStore()
 const sampleDataStore = useSampleDataStore()
 
+const csvText = ref(sampleData)
 const csvDatas = ref<object[]>([])
-const csvSampleData = ref<Shot[]>([])
+// const csvSampleData = ref<Shot[]>([])
+const csvSampleData = computed(() => {
+  csvDatas.value = csvParse(csvText.value)
+  return getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
+})
 const hearders = computed(() => _.keys(csvDatas.value[0] ?? {}))
 const selectedHeader = ref('Carry Flat - Length')
 const fromZero = ref(false)
@@ -72,7 +77,6 @@ const shotData = computed(() => {
     return sampleDataStore.shots
   }
   if (preferenceStore.dataType == 'custom') {
-    csvSampleData.value = getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
     return csvSampleData.value
   }
   return []
@@ -114,11 +118,6 @@ const getClubType = (club: string): ClubTypes => {
   }
 }
 
-
-onMounted(() => {
-  csvDatas.value = csvParse(sampleData)
-  csvSampleData.value = getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
-})
 
 </script>
 

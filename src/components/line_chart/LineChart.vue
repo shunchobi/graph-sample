@@ -26,7 +26,6 @@
           )"
           stroke="red" 
           fill="none"
-
           />
 
         <!-- box plot -->
