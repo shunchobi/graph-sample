@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { Club, ClubTypes, Clubs, FlyingDistance, Shot } from './line_chart/shot';
+import { Club, ClubTypes, Clubs, DataValue, Shot } from './line_chart/shot';
 
 export const useSampleDataStore = defineStore('sampleData', () => {
 
@@ -9,11 +9,11 @@ export const useSampleDataStore = defineStore('sampleData', () => {
 
     const generateShotDatas = () => {
         const shotedClubs = _.flatten(_.map(_.keys(Clubs), club => _.map(Array(10), _ => club)))
-        shots.value =  _.map(shotedClubs, (clubType, index) => {
+        shots.value = _.map(shotedClubs, (clubType, index) => {
             const shotTime = randomShotTime(index)
             const club = new Club({ type: clubType as ClubTypes, name: undefined })
-            const flyingDistance = new FlyingDistance(sampleData[clubType as ClubTypes]())
-            return new Shot({ shotTime: shotTime, club: club, flyingDistance: flyingDistance })
+            const flyingDistance = new DataValue(sampleData[clubType as ClubTypes]())
+            return new Shot({ shotTime: shotTime, club: club, data: flyingDistance })
         })
     }
 

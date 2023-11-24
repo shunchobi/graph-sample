@@ -7,7 +7,7 @@
         <g class="myYaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="end">
           <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(0)" :y2="y(maxHozyosenValue)" stroke="#000"></line>
 
-          <template v-for="scale in shotDistanceScales" :key="scale">
+          <template v-for="scale in shotDataValueScales" :key="scale">
             <line :x1="x(0)" :y1="y(scale)" :x2="x(_.keys(Clubs).length) + 5" :y2="y(scale)" stroke="#ccc"></line>
             <text :x="x(0) - 20" :y="y(scale)" text-anchor="middle" font="10px &quot;Arial&quot;" stroke="none"
               fill="#888888"
@@ -19,17 +19,13 @@
         </g>
 
         <!-- avarage lines -->
-        <path 
-          :d="getPathD(
-            _.map(datasSummary, data => data.clubIndex), 
-            _.map(datasSummary, data => data.average)
-          )"
-          stroke="red" 
-          fill="none"
-          />
+        <path :d="getPathD(
+          _.map(dataSummaries, data => data.clubIndex),
+          _.map(dataSummaries, data => data.average)
+        )" stroke="red" fill="none" />
 
         <!-- box plot -->
-        <template v-for="shot in datasSummary" :key="shot.clubIndex">
+        <template v-for="shot in dataSummaries" :key="shot.clubIndex">
           <template v-if="graphType == 'box' || graphType == 'linebox'">
             <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)"
               :y2="y(shot.min!)" stroke="#000"></line>
@@ -45,8 +41,8 @@
 
         <!-- dots -->
         <template v-if="graphType == 'line' || graphType == 'linebox'" v-for="shot in shots" :key="shot">
-          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.flyingDidtance.distance)" r="3"
-            fill="#ff00005e" />
+          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="#ff00005e" />
+          {{ shot.data.value }}
         </template>
 
 
@@ -87,16 +83,16 @@ const props = defineProps<{
 
 
 // 各クラブの複数の飛距離の平均のShot[]
-const datasSummary = computed(() => {
+const dataSummaries = computed(() => {
   const groupByClubType = _.groupBy(props.shots, shot => shot.club.clubType)
   const summaries = _.map(groupByClubType, shots => {
-    const distances = _.map(shots, shot => shot.flyingDidtance.distance)
+    const dataValue = _.map(shots, shot => shot.data.value)
 
-    const average = _.mean(distances)
-    const min = d3.min(distances)
-    const max = d3.max(distances)
-    const q25 = d3.quantile(distances, 0.25)
-    const q75 = d3.quantile(distances, 0.75)
+    const average = _.mean(dataValue)
+    const min = d3.min(dataValue)
+    const max = d3.max(dataValue)
+    const q25 = d3.quantile(dataValue, 0.25)
+    const q75 = d3.quantile(dataValue, 0.75)
 
     return {
       clubIndex: clubIndex(shots[0].club.clubType),
@@ -140,30 +136,30 @@ const getPathD = (xPoints: number[], yPoints: number[]) => {
 const maxHozyosen = 20
 const hozyosenSteps = [0.5, 1, 5, 10, 50, 100, 500, 1000]
 const hozyosenStep = computed(() => {
-  const maxFlyingDistance = _.max(_.map(props.shots, shot => shot.flyingDidtance.distance))
-  const minFlyingDistance = _.min(_.map(props.shots, shot => shot.flyingDidtance.distance))
+  const maxDataValue = _.max(_.map(props.shots, shot => shot.data.value))
+  const minDataValue = _.min(_.map(props.shots, shot => shot.data.value))
 
-  if (!maxFlyingDistance || !minFlyingDistance) return 0
+  if (!maxDataValue || !minDataValue) return 0
 
-  const diff = maxFlyingDistance - minFlyingDistance
+  const diff = maxDataValue - minDataValue
 
   const hozyosenStepIndex = _.findIndex(hozyosenSteps, step => step * maxHozyosen > diff)
   return hozyosenSteps[hozyosenStepIndex]
 })
 const maxHozyosenValue = computed(() => {
-  const maxFlyingDistance = _.max(_.map(props.shots, shot => shot.flyingDidtance.distance))
-  if (!maxFlyingDistance) return 0
+  const maxDataValue = _.max(_.map(props.shots, shot => shot.data.value))
+  if (!maxDataValue) return 0
 
-  return (Math.floor(maxFlyingDistance / hozyosenStep.value) + 1) * hozyosenStep.value
+  return (Math.floor(maxDataValue / hozyosenStep.value) + 1) * hozyosenStep.value
 })
 const minHozyosenValue = computed(() => {
   if (props.fromZero) return 0
-  const minFlyingDistance = _.min(_.map(props.shots, shot => shot.flyingDidtance.distance))
-  if (!minFlyingDistance) return 0
+  const minDataValue = _.min(_.map(props.shots, shot => shot.data.value))
+  if (!minDataValue) return 0
 
-  return (Math.floor(minFlyingDistance / hozyosenStep.value) - 1) * hozyosenStep.value
+  return (Math.floor(minDataValue / hozyosenStep.value) - 1) * hozyosenStep.value
 })
-const shotDistanceScales = computed(() => {
+const shotDataValueScales = computed(() => {
   return _.range(minHozyosenValue.value, maxHozyosenValue.value + 1, hozyosenStep.value)
 })
 

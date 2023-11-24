@@ -1,20 +1,19 @@
 export class Shot {
     readonly shotTime: Date;
     readonly club: Club;
-    readonly flyingDidtance: FlyingDistance;
+    readonly data: DataValue;
 
-    constructor(shot: {shotTime: Date, club: Club, flyingDistance: FlyingDistance}) {
+    constructor(shot: { shotTime: Date, club: Club, data: DataValue }) {
         this.shotTime = shot.shotTime
         this.club = shot.club
-        this.flyingDidtance = shot.flyingDistance
+        this.data = shot.data
     }
 }
 
-export class FlyingDistance {
-    readonly distance: number;
-
-    constructor(_distance: number) {
-        this.distance = _distance
+export class DataValue {
+    readonly value: number;
+    constructor(_value: number) {
+        this.value = _value
     }
 }
 

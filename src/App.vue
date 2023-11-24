@@ -54,19 +54,18 @@ import { useSampleDataStore } from './components/sampleData'
 import { computed, ref } from 'vue'
 import { sampleData } from "./sampleData"
 import { csvParse } from './parser'
-import { Club, ClubTypes, FlyingDistance, Shot } from './components/line_chart/shot';
+import { Club, ClubTypes, DataValue, Shot } from './components/line_chart/shot';
 
 const preferenceStore = usePreferenceStore()
 const sampleDataStore = useSampleDataStore()
 
 const csvText = ref(sampleData)
 const csvDatas = ref<object[]>([])
-// const csvSampleData = ref<Shot[]>([])
 const csvSampleData = computed(() => {
   csvDatas.value = csvParse(csvText.value)
   return getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
 })
-const hearders = computed(() => _.keys(csvDatas.value[0] ?? {}))
+const hearders = computed(() => _.keys(csvDatas.value[0]))
 const selectedHeader = ref('Carry Flat - Length')
 const fromZero = ref(false)
 
@@ -84,23 +83,28 @@ const shotData = computed(() => {
 
 
 const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]) => {
-  const clubAndFlyingLength = _.map(datas, data => {
+  const clubAndDataValue = _.map(datas, data => {
     return {
       'Club': _.get(data, 'Club'),
       'value': _.get(data, selectedHeader.value),
     }
   })
 
-  return _.map(clubAndFlyingLength, data => {
-    const flyingDidtance = data['value']
-    const clubName = data['Club']
+  const targetHeaderDatas = _.map(clubAndDataValue, data => {
+    const value = data['value']
+    if (_.isEmpty(value)) return undefined
+    if (!_.isNumber(_.toNumber(value))) return undefined
+    if (_.isNaN(_.toNumber(value))) return undefined
 
+    const clubName = data['Club']
     const clubType = getClubType(clubName!)
     const shotTime = new Date()
     const club = new Club({ type: clubType, name: undefined })
-    const flyingDistance = new FlyingDistance(Math.floor(flyingDidtance!))
-    return new Shot({ shotTime: shotTime, club: club, flyingDistance: flyingDistance })
+    const dataValue = new DataValue(Math.floor(value))
+    return new Shot({ shotTime: shotTime, club: club, data: dataValue })
   })
+
+  return _.filter(targetHeaderDatas, data => data != undefined)
 }
 
 const getClubType = (club: string): ClubTypes => {
