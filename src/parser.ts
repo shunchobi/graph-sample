@@ -7,7 +7,7 @@ export function csvParse(data: string): object[] {
 
     const header = _.split(lines[1], seperater)
 
-    return _.map(_.slice(lines, 3), line => {
+    return _.map(_.slice(lines, 2), line => {
 
         const lineDatas = _.split(line, seperater)
 

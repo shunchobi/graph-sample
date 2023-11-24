@@ -2,11 +2,13 @@ export class Shot {
     readonly shotTime: Date;
     readonly club: Club;
     readonly data: DataValue;
+    readonly unit: string;
 
-    constructor(shot: { shotTime: Date, club: Club, data: DataValue }) {
+    constructor(shot: { shotTime: Date, club: Club, data: DataValue, unit: string, }) {
         this.shotTime = shot.shotTime
         this.club = shot.club
         this.data = shot.data
+        this.unit = shot.unit
     }
 }
 

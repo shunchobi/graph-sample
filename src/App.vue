@@ -83,13 +83,15 @@ const shotData = computed(() => {
 })
 
 
-const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]) => {
+const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]): Shot[] => {
   const clubAndDataValue = _.map(datas, data => {
     return {
       'Club': _.get(data, 'Club'),
       'value': _.get(data, selectedHeader.value),
     }
   })
+
+  const unit = clubAndDataValue[0]['value']
 
   const targetHeaderDatas = _.map(clubAndDataValue, data => {
     const value = data['value']
@@ -102,10 +104,10 @@ const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]) => {
     const shotTime = new Date()
     const club = new Club({ type: clubType, name: undefined })
     const dataValue = new DataValue(Math.floor(value))
-    return new Shot({ shotTime: shotTime, club: club, data: dataValue })
+    return new Shot({ shotTime: shotTime, club: club, data: dataValue, unit: unit })
   })
 
-  return _.filter(targetHeaderDatas, data => data != undefined)
+  return _.filter(targetHeaderDatas, data => data != undefined) as Shot[]
 }
 
 const getClubType = (club: string): ClubTypes => {

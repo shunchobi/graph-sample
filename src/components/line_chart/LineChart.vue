@@ -1,12 +1,19 @@
 <template>
   <div style="background-color: rgb(236, 242, 244);">
-    <svg view-box="150 130 200 150" width="450" height="400">
+    <svg view-box="150 130 200 150" width="450" height="420">
       <g>
+
+        <!-- unit -->
+        <text :x="x(0) - 20" :y="y(maxHozyosenValue) - 20" text-anchor="middle" font="10px &quot;Arial&quot;"
+          stroke="none" fill="#888888"
+          style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); text-anchor: middle; font: 12px sans-serif;"
+          font-size="12px" font-family="sans-serif" font-weight="normal" transform="matrix(1,0,0,1,0,9)">
+          <tspan style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" dy="-5">{{ unitName }}</tspan>
+        </text>
 
         <!-- leftline -->
         <g class="myYaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="end">
           <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(0)" :y2="y(maxHozyosenValue)" stroke="#000"></line>
-
           <template v-for="scale in shotDataValueScales" :key="scale">
             <line :x1="x(0)" :y1="y(scale)" :x2="x(_.keys(Clubs).length) + 5" :y2="y(scale)" stroke="#ccc"></line>
             <text :x="x(0) - 20" :y="y(scale)" text-anchor="middle" font="10px &quot;Arial&quot;" stroke="none"
@@ -22,7 +29,7 @@
         <path :d="getPathD(
           _.map(dataSummaries, data => data.clubIndex),
           _.map(dataSummaries, data => data.average)
-        )" stroke="red" fill="none" />
+        )" stroke="#ccc" fill="none" />
 
         <!-- box plot -->
         <template v-for="shot in dataSummaries" :key="shot.clubIndex">
@@ -41,7 +48,7 @@
 
         <!-- dots -->
         <template v-if="graphType == 'line' || graphType == 'linebox'" v-for="shot in shots" :key="shot">
-          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="#ff00005e" />
+          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="#red" />
           {{ shot.data.value }}
         </template>
 
@@ -81,6 +88,10 @@ const props = defineProps<{
   fromZero: boolean
 }>()
 
+const unitName = computed(() => {
+  if (_.isEmpty(props.shots)) return ''
+  return props.shots[0].unit
+})
 
 // 各クラブの複数の飛距離の平均のShot[]
 const dataSummaries = computed(() => {
@@ -160,7 +171,7 @@ const minHozyosenValue = computed(() => {
   return (Math.floor(minDataValue / hozyosenStep.value) - 1) * hozyosenStep.value
 })
 const shotDataValueScales = computed(() => {
-  return _.range(minHozyosenValue.value, maxHozyosenValue.value + 1, hozyosenStep.value)
+  return _.range(minHozyosenValue.value, maxHozyosenValue.value + hozyosenStep.value, hozyosenStep.value)
 })
 
 
@@ -171,7 +182,7 @@ const clubIndexToX = (index: number): number => {
 }
 
 const x = computed(() => d3.scaleLinear([0, clubs.value.length], [40, 420]))
-const y = computed(() => d3.scaleLinear([minHozyosenValue.value, maxHozyosenValue.value], [376.5, 20]));
+const y = computed(() => d3.scaleLinear([minHozyosenValue.value, maxHozyosenValue.value], [396.5, 40]));
 
 
 const clubs = computed(() => {
