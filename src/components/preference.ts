@@ -6,12 +6,18 @@ export const usePreferenceStore = defineStore('preference', () => {
 
     const STORE_NAME = 'g-log-chart-sample-preference'
 
-    const graphType = ref<'line' | 'box' | 'linebox'>('line')
+    const showLine = ref(true)
+    const showDot = ref(true)
+    const showBox = ref(false)
+
     const dataType = ref<'random' | 'custom'>('random')
 
     const saveToLocalStorage = () => {
+        console.log(showBox.value, showLine.value, showDot.value)
         localStorage.setItem(STORE_NAME, JSON.stringify({
-            graphType: graphType.value,
+            showLine: showLine.value,
+            showDot: showDot.value,
+            showBox: showBox.value,
             dataType: dataType.value,
         }))
     }
@@ -19,24 +25,34 @@ export const usePreferenceStore = defineStore('preference', () => {
     const getFromLocalStorage = () => {
         const settings = localStorage.getItem(STORE_NAME)
         return settings ? JSON.parse(settings) : {
-            graphType: graphType.value,
+            showLine: showLine.value,
+            showDot: showDot.value,
+            showBox: showBox.value,
             dataType: dataType.value,
         }
     }
 
     onMounted(() => {
         const preferences = getFromLocalStorage()
-        graphType.value = preferences.graphType
+        showLine.value = preferences.showLine
+        showDot.value = preferences.showDot
+        showBox.value = preferences.showBox
         dataType.value = preferences.dataType
     })
 
     watch(
-        () => [graphType.value, dataType.value],
+        () => [
+            showLine.value,
+            showDot.value,
+            showBox.value, dataType.value,
+        ],
         () => saveToLocalStorage()
     )
 
     return {
-        graphType,
+        showLine,
+        showDot,
+        showBox,
         dataType,
     }
 });

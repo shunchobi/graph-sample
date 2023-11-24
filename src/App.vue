@@ -1,11 +1,11 @@
 <template>
   <div style="margin-bottom: 30px;">
-    <input v-model="preferenceStore.graphType" type="radio" id="radio1" name="graphType" value="line">
-    <label for="radio1"><span class="radio-title">折れ線</span></label>
-    <input v-model="preferenceStore.graphType" type="radio" id="radio2" name="graphType" value="box">
-    <label for="radio2"><span class="radio-title">箱ひげ</span></label>
-    <input v-model="preferenceStore.graphType" type="radio" id="radio3" name="graphType" value="linebox">
-    <label for="radio3"><span class="radio-title">箱ひげ折れ線</span></label>
+    <input v-model="preferenceStore.showLine" type="checkbox" id="checkbox1" name="graphType">
+    <label for="checkbox1"><span class="radio-title">折れ線（平均値線）</span></label>
+    <input v-model="preferenceStore.showDot" type="checkbox" id="checkbox2" name="graphType">
+    <label for="checkbox2"><span class="radio-title">ドット（データ値）</span></label>
+    <input v-model="preferenceStore.showBox" type="checkbox" id="checkbox3" name="graphType">
+    <label for="checkbox3"><span class="radio-title">箱ひげ（密度域）</span></label>
   </div>
 
   <div style="margin-bottom: 30px;">
@@ -39,7 +39,7 @@
   </div>
 
   <div>
-    <LineChart :shots="shotData" :graph-type="preferenceStore.graphType" :from-zero="fromZero" />
+    <LineChart :shots="shotData" :from-zero="fromZero" />
   </div>
 
   <div v-if="preferenceStore.dataType == 'custom'" style="margin-top: 30px;">
@@ -149,5 +149,11 @@ input[type=radio]+label {
 input[type=radio]:checked+label {
   background-image: none;
   background-color: #4e4d4d;
+}
+
+.radio-title {
+  color: black;
+  user-select: none;
+  padding-right: 10px;
 }
 </style>

@@ -26,28 +26,28 @@
         </g>
 
         <!-- avarage lines -->
-        <path :d="getPathD(
-          _.map(dataSummaries, data => data.clubIndex),
-          _.map(dataSummaries, data => data.average)
-        )" stroke="#ccc" fill="none" />
+        <template v-if="preferenceStore.showLine">
+          <path :d="getPathD(
+            _.map(dataSummaries, data => data.clubIndex),
+            _.map(dataSummaries, data => data.average)
+          )" stroke="#ccc" fill="none" />
+        </template>
 
         <!-- box plot -->
-        <template v-for="shot in dataSummaries" :key="shot.clubIndex">
-          <template v-if="graphType == 'box' || graphType == 'linebox'">
-            <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)"
-              :y2="y(shot.min!)" stroke="#000"></line>
-            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex) + 2"
-              :y2="y(shot.min!)" stroke="#000"></line>
-            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex) + 2"
-              :y2="y(shot.max!)" stroke="#000"></line>
-            <rect :x="clubIndexToX(shot.clubIndex) - 5" :y="y(shot.q75!)" :height="Math.abs(y(shot.q75!) - y(shot.q25!))"
-              width="10" stroke="#000" />
-          </template>
+        <template v-if="preferenceStore.showBox" v-for="shot in dataSummaries" :key="shot.clubIndex">
+          <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)"
+            :y2="y(shot.min!)" stroke="#000"></line>
+          <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex) + 2"
+            :y2="y(shot.min!)" stroke="#000"></line>
+          <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex) + 2"
+            :y2="y(shot.max!)" stroke="#000"></line>
+          <rect :x="clubIndexToX(shot.clubIndex) - 5" :y="y(shot.q75!)" :height="Math.abs(y(shot.q75!) - y(shot.q25!))"
+            width="10" stroke="#000" />
         </template>
 
 
         <!-- dots -->
-        <template v-if="graphType == 'line' || graphType == 'linebox'" v-for="shot in shots" :key="shot">
+        <template v-if="preferenceStore.showDot" v-for="shot in shots" :key="shot">
           <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="red" />
           {{ shot.data.value }}
         </template>
@@ -81,10 +81,12 @@ import { computed } from 'vue';
 import _ from 'lodash'
 import { Clubs, ClubTypes, Shot } from './shot'
 import * as d3 from 'd3'
+import { usePreferenceStore } from '../preference';
+
+const preferenceStore = usePreferenceStore()
 
 const props = defineProps<{
   shots: Shot[]
-  graphType: 'line' | 'box' | 'linebox'
   fromZero: boolean
 }>()
 
