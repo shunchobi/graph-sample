@@ -48,7 +48,7 @@
 
         <!-- dots -->
         <template v-if="graphType == 'line' || graphType == 'linebox'" v-for="shot in shots" :key="shot">
-          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="#red" />
+          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="red" />
           {{ shot.data.value }}
         </template>
 
