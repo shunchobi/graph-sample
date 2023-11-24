@@ -1,55 +1,59 @@
 <template>
-  <div style="margin-bottom: 30px;">
-    <input v-model="preferenceStore.showLine" type="checkbox" id="checkbox1" name="graphType">
-    <label for="checkbox1"><span class="radio-title">折れ線（平均値線）</span></label>
-    <input v-model="preferenceStore.showDot" type="checkbox" id="checkbox2" name="graphType">
-    <label for="checkbox2"><span class="radio-title">ドット（データ値）</span></label>
-    <input v-model="preferenceStore.showBox" type="checkbox" id="checkbox3" name="graphType">
-    <label for="checkbox3"><span class="radio-title">箱ひげ（密度域）</span></label>
-  </div>
+  <div style="text-align: center">
 
-  <div>
-    <label style="color: black; margin-right: 10px;">データの種類:</label>
-    <select v-model="selectedHeader" style="margin-bottom: 10px;">
-      <template v-for="h in hearders" :key="h">
-        <option>{{ h }}</option>
-      </template>
-    </select>
-  </div>
+    <div style="margin-bottom: 30px;">
+      <input v-model="preferenceStore.showLine" type="checkbox" id="checkbox1" name="graphType">
+      <label for="checkbox1"><span class="radio-title">折れ線（平均値線）</span></label>
+      <input v-model="preferenceStore.showDot" type="checkbox" id="checkbox2" name="graphType">
+      <label for="checkbox2"><span class="radio-title">ドット（データ値）</span></label>
+      <input v-model="preferenceStore.showBox" type="checkbox" id="checkbox3" name="graphType">
+      <label for="checkbox3"><span class="radio-title">箱ひげ（密度域）</span></label>
+    </div>
 
-  <div>
-    <label style="color: black; margin-right: 10px;">データの起点</label>
-    <select v-model="fromZero" style="margin-bottom: 10px;">
-      <option :value="true">ゼロ</option>
-      <option :value="false">自動</option>
-    </select>
-  </div>
+    <div>
+      <label style="color: black; margin-right: 10px;">データの種類:</label>
+      <select v-model="selectedHeader" style="margin-bottom: 10px;">
+        <template v-for="h in hearders" :key="h">
+          <option>{{ h }}</option>
+        </template>
+      </select>
+    </div>
 
-  <div>
-    <LineChart :shots="shotData" :from-zero="fromZero" />
-  </div>
+    <div>
+      <label style="color: black; margin-right: 10px;">データの起点</label>
+      <select v-model="fromZero" style="margin-bottom: 10px;">
+        <option :value="true">ゼロ</option>
+        <option :value="false">自動</option>
+      </select>
+    </div>
 
-  <div style="margin-top: 30px;">
-    <textarea style="width: 460px; height: 250px;" v-model="csvText"></textarea>
-  </div>
+    <div>
+      <Chart :shots="shotData" :from-zero="fromZero" :display-clubs="displayClubs" />
+    </div>
 
-  <div style="margin: 10px;">
-    <button @click="csvText = sampleData" style="margin-right: 15px;">提供データ1</button>
-    <button @click="csvText = ramdomCsvData">サンプルデータ</button>
+    <div style="margin-top: 30px;">
+      <textarea style="width: 460px; height: 250px;" v-model="csvText"></textarea>
+    </div>
+
+    <div style="margin: 10px;">
+      <button @click="csvText = sampleData" style="margin-right: 15px;">提供データ1</button>
+      <button @click="csvText = ramdomCsvData">サンプルデータ</button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import LineChart from './components/line_chart/LineChart.vue';
+import Chart from './components/Chart.vue';
 import _ from 'lodash'
-import { usePreferenceStore } from './components/preference'
+import { usePreferenceStore } from './preference'
 import { computed, ref } from 'vue'
-import { sampleData } from "./sampleData"
-import { csvParse } from './parser'
-import { Club, DataValue, Shot } from './components/line_chart/shot';
-import { ramdomCsvData } from './components/randomCsv.ts'
-
-import { ClubCodes } from './components/line_chart/csvType.ts'
+import { sampleData } from './csv/sampleData';
+import { ramdomCsvData } from './csv/randomCsv';
+import { ClubCsvName, Header } from './type/csvType.ts'
+import { csvParse } from './util/parser';
+import { DataValue, Shot } from './type/shot';
+import { csvClubNameToClubCode, clubInstances } from './type/clubUtil';
+import { Club } from './type/club';
 
 const preferenceStore = usePreferenceStore()
 
@@ -57,7 +61,7 @@ const csvText = ref(sampleData)
 const csvDatas = ref<object[]>([])
 const csvSampleData = computed(() => {
   csvDatas.value = csvParse(csvText.value)
-  return getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
+  return getDataFromCsv(csvDatas.value)
 })
 const hearders = computed(() => _.keys(csvDatas.value[0]))
 const selectedHeader = ref('Carry Flat - Length')
@@ -69,10 +73,10 @@ const shotData = computed(() => {
 })
 
 
-const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]): Shot[] => {
+const getDataFromCsv = (datas: object[]): Shot[] => {
   const clubAndDataValue = _.map(datas, data => {
     return {
-      'Club': _.get(data, 'Club'),
+      'Club': _.get(data, Header.club),
       'value': _.get(data, selectedHeader.value),
     }
   })
@@ -85,10 +89,12 @@ const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]): Shot[] => {
     if (!_.isNumber(_.toNumber(value))) return undefined
     if (_.isNaN(_.toNumber(value))) return undefined
 
-    const clubName = data['Club']
-    const clubType = getClubType(clubName!)
+    const clubName: ClubCsvName | undefined = data['Club']
+    if (!clubName) return undefined
+
+    const clubType = csvClubNameToClubCode[clubName]
     const shotTime = new Date()
-    const club = new Club({ type: clubType, name: undefined })
+    const club = clubInstances[clubType]
     const dataValue = new DataValue(Math.floor(value))
     return new Shot({ shotTime: shotTime, club: club, data: dataValue, unit: unit })
   })
@@ -96,51 +102,24 @@ const getClubAndFlyingDirectionDatasFromCsv = (datas: object[]): Shot[] => {
   return _.filter(targetHeaderDatas, data => data != undefined) as Shot[]
 }
 
-const getClubType = (club: string): ClubCodes => {
-  switch (club) {
-    case '9 iron':
-      return '9I';
-    case '8 iron':
-      return '8I';
-    case '7 iron':
-      return '7I';
-    case '6 iron':
-      return '6I';
-    case '5 iron':
-      return '5I';
-    case '4 iron':
-      return '4I';
 
-
-    case '5 wood':
-      return '5W';
-    case '2 wood':
-      return '2W';
-
-    case '4 ut':
-      return '4UT'
-    case '3 ut':
-      return '3UT'
-
-    case 'ピッチングウェッジ':
-      return 'PW'
-    case 'サンドウェッジ':
-      return 'SW'
-
-    case '56°':
-      return '7WG'
-    case '60°':
-      return '9WG'
-
-
-    case 'ドライバー':
-      return 'DR'
-    default:
-      console.log(`CSVから取得したクラブの名前が予想されていない名前です。: ${club}`)
-      return 'XXX'
-  }
-}
-
+const displayClubs: Club[] = [
+  clubInstances['7WG'],
+  clubInstances['9WG'],
+  clubInstances['SW'],
+  clubInstances['PW'],
+  clubInstances['9I'],
+  clubInstances['8I'],
+  clubInstances['7I'],
+  clubInstances['6I'],
+  clubInstances['5I'],
+  clubInstances['4I'],
+  clubInstances['4UT'],
+  clubInstances['3UT'],
+  clubInstances['5W'],
+  clubInstances['2W'],
+  clubInstances['DR'],
+]
 
 </script>
 
@@ -172,4 +151,4 @@ input[type=radio]:checked+label {
   user-select: none;
   padding-right: 10px;
 }
-</style>
+</style>./preference.ts

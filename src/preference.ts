@@ -11,7 +11,6 @@ export const usePreferenceStore = defineStore('preference', () => {
     const showBox = ref(false)
 
     const saveToLocalStorage = () => {
-        console.log(showBox.value, showLine.value, showDot.value)
         localStorage.setItem(STORE_NAME, JSON.stringify({
             showLine: showLine.value,
             showDot: showDot.value,

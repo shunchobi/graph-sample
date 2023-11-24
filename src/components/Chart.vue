@@ -1,6 +1,6 @@
 <template>
   <div style="background-color: rgb(236, 242, 244);">
-    <svg view-box="150 130 200 150" width="450" height="420">
+    <svg :width="graphViewWidth" :height="graphViewHeight">
       <g>
 
         <!-- unit -->
@@ -15,7 +15,7 @@
         <g class="myYaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="end">
           <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(0)" :y2="y(maxHozyosenValue)" stroke="#000"></line>
           <template v-for="scale in shotDataValueScales" :key="scale">
-            <line :x1="x(0)" :y1="y(scale)" :x2="x(_.keys(Clubs).length) + 5" :y2="y(scale)" stroke="#ccc"></line>
+            <line :x1="x(0)" :y1="y(scale)" :x2="x(displayClubs.length) + 5" :y2="y(scale)" stroke="#ccc"></line>
             <text :x="x(0) - 20" :y="y(scale)" text-anchor="middle" font="10px &quot;Arial&quot;" stroke="none"
               fill="#888888"
               style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); text-anchor: middle; font: 12px sans-serif;"
@@ -35,7 +35,7 @@
 
         <!-- dots -->
         <template v-if="preferenceStore.showDot" v-for="shot in shots" :key="shot">
-          <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.data.value)" r="3" fill="red" />
+          <circle :cx="clubIndexToX(clubIndex(shot.club.code))" :cy="y(shot.data.value)" r="3" fill="red" />
           {{ shot.data.value }}
         </template>
 
@@ -66,10 +66,10 @@
 
         <!-- underline -->
         <g class="myXaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="middle">
-          <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(_.keys(Clubs).length)" :y2="y(minHozyosenValue)"
-            stroke="#000"></line>
+          <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(displayClubs.length)" :y2="y(minHozyosenValue)" stroke="#000">
+          </line>
 
-          <template v-for="(club, clubIndex) in clubs" :key="club">
+          <template v-for="(club, clubIndex) in displayClubs" :key="club">
             <line :x1="clubIndexToX(clubIndex)" :y1="y(minHozyosenValue)" :x2="clubIndexToX(clubIndex)"
               :y2="y(minHozyosenValue) + 5" stroke="#000">
             </line>
@@ -77,7 +77,7 @@
               font="10px &quot;Arial&quot;" stroke="none" fill="#888888"
               style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); text-anchor: middle; font: 12px sans-serif;"
               font-size="12px" font-family="sans-serif" font-weight="normal" transform="matrix(1,0,0,1,0,9)">
-              <tspan style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" dy="4">{{ club }}</tspan>
+              <tspan style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" dy="4">{{ club.code }}</tspan>
             </text>
           </template>
         </g>
@@ -90,15 +90,20 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import _ from 'lodash'
-import { Clubs, Shot } from './shot'
 import * as d3 from 'd3'
 import { usePreferenceStore } from '../preference';
-import { ClubCodes } from './csvType';
+import { Shot } from '../type/shot';
+import { Club } from '../type/club';
+import { ClubCode } from '../type/csvType';
 
 const preferenceStore = usePreferenceStore()
+const graphViewWidth = 550
+const graphViewHeight = 420
+const graphEdgeSpace = 30
 
 const props = defineProps<{
   shots: Shot[]
+  displayClubs: Club[]
   fromZero: boolean
 }>()
 
@@ -109,8 +114,8 @@ const unitName = computed(() => {
 
 // 各クラブの複数の飛距離の平均のShot[]
 const dataSummaries = computed(() => {
-  const groupByClubType = _.groupBy(props.shots, shot => shot.club.clubType)
-  const summaries = _.map(groupByClubType, shots => {
+  const groupByClubCode = _.groupBy(props.shots, shot => shot.club.code)
+  const summaries = _.map(groupByClubCode, shots => {
     const dataValue = _.map(shots, shot => shot.data.value)
 
     const average = _.mean(dataValue)
@@ -120,7 +125,7 @@ const dataSummaries = computed(() => {
     const q75 = d3.quantile(dataValue, 0.75)
 
     return {
-      clubIndex: clubIndex(shots[0].club.clubType),
+      clubIndex: clubIndex(shots[0].club.code),
       club: shots[0].club,
       average,
       min,
@@ -195,20 +200,18 @@ const clubIndexToX = (index: number): number => {
   return x.value(index + 1)
 }
 
-const x = computed(() => d3.scaleLinear([0, clubs.value.length], [40, 420]))
-const y = computed(() => d3.scaleLinear([minHozyosenValue.value, maxHozyosenValue.value], [396.5, 40]));
+const x = computed(() => d3.scaleLinear([0, props.displayClubs.length], [40, graphViewWidth - graphEdgeSpace]))
+const y = computed(() => d3.scaleLinear([minHozyosenValue.value, maxHozyosenValue.value], [graphViewHeight - graphEdgeSpace, 40]));
 
-
-const clubs = computed(() => {
-  return _.keys(Clubs)
-})
-
-const clubIndex = (club: ClubCodes): number => {
-  return _.findIndex(_.keys(Clubs), _club => _club == club)
+const clubIndex = (clubCode: ClubCode): number => {
+  const index = _.findIndex(props.displayClubs, displayClub => displayClub.code == clubCode)
+  if (index == -1) {
+    console.log('表示するクラブ内に指定されたクラブコードを持つクラブを見つけられませんでした。', clubCode, _.find(props.displayClubs, club => club.code == '7WG'))
+  }
+  return index
 }
 
 
 
 </script>
 
-<style scoped></style>
