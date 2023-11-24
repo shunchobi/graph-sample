@@ -182,7 +182,7 @@ const minHozyosenValue = computed(() => {
   const minDataValue = _.min(_.map(props.shots, shot => shot.data.value))
   if (!minDataValue) return 0
 
-  return (Math.floor(minDataValue / hozyosenStep.value) - 1) * hozyosenStep.value
+  return (Math.ceil(minDataValue / hozyosenStep.value) - 1) * hozyosenStep.value
 })
 const shotDataValueScales = computed(() => {
   return _.range(minHozyosenValue.value, maxHozyosenValue.value + hozyosenStep.value, hozyosenStep.value)
