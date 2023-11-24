@@ -19,55 +19,53 @@
         </g>
 
         <!-- avarage lines -->
-        <!-- TODO 飛距離データがない場合の保管に対応する -->
-        <template v-for="(shot, avarageShotIndex) in flyingDidtanceSummary" :key="shot.clubIndex">
-          <path stroke="#ccc"
-            :d="`
-            M ${clubIndexToX(clubIndex(shot.club.clubType))},${y(shot.average)} 
-            L 
-                                                            ${flyingDidtanceSummary.length - 1 <= avarageShotIndex ? clubIndexToX(clubIndex(shot.club.clubType)) : clubIndexToX(clubIndex(flyingDidtanceSummary[avarageShotIndex + 1].club.clubType))},
-                                                            ${flyingDidtanceSummary.length - 1 <= avarageShotIndex ? y(shot.average) : y(flyingDidtanceSummary[avarageShotIndex + 1].average)}`" />
-        </template>
+        <path 
+          :d="getPathD(
+            _.map(datasSummary, data => data.clubIndex), 
+            _.map(datasSummary, data => data.average)
+          )"
+          stroke="red" 
+          fill="none"
+
+          />
 
         <!-- box plot -->
-        <!-- クラブの飛距離の最大値、最小値 -->
-        <template v-for="shot in flyingDidtanceSummary" :key="shot.clubIndex">
-          <template v-if="graphType == 'box' || graphType == 'linebox' ">
-            <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)" :y2="y(shot.min!)" stroke="#000"></line>
-            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex) + 2" :y2="y(shot.min!)" stroke="#000"></line>
-            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex) + 2" :y2="y(shot.max!)" stroke="#000"></line>
-            <rect 
-              :x="clubIndexToX(shot.clubIndex) - 5" 
-              :y="y(shot.q75!)"
-              :height="shot.q75! - shot.q25!"
-              width="10" 
-              stroke="#000"/>
+        <template v-for="shot in datasSummary" :key="shot.clubIndex">
+          <template v-if="graphType == 'box' || graphType == 'linebox'">
+            <line :x1="clubIndexToX(shot.clubIndex)" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex)"
+              :y2="y(shot.min!)" stroke="#000"></line>
+            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.min!)" :x2="clubIndexToX(shot.clubIndex) + 2"
+              :y2="y(shot.min!)" stroke="#000"></line>
+            <line :x1="clubIndexToX(shot.clubIndex) - 2" :y1="y(shot.max!)" :x2="clubIndexToX(shot.clubIndex) + 2"
+              :y2="y(shot.max!)" stroke="#000"></line>
+            <rect :x="clubIndexToX(shot.clubIndex) - 5" :y="y(shot.q75!)" :height="Math.abs(y(shot.q75!) - y(shot.q25!))"
+              width="10" stroke="#000" />
           </template>
         </template>
 
 
-        <!-- distance dots -->
-        <template v-if="graphType == 'line'|| graphType == 'linebox' " v-for="shot in shots" :key="shot">
+        <!-- dots -->
+        <template v-if="graphType == 'line' || graphType == 'linebox'" v-for="shot in shots" :key="shot">
           <circle :cx="clubIndexToX(clubIndex(shot.club.clubType))" :cy="y(shot.flyingDidtance.distance)" r="3"
-            fill="red" />
+            fill="#ff00005e" />
         </template>
 
 
         <!-- underline -->
         <g class="myXaxis" fill="none" font-size="10" font-family="sans-serif" text-anchor="middle">
-          <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(_.keys(Clubs).length)" :y2="y(minHozyosenValue)" stroke="#000"></line>
+          <line :x1="x(0)" :y1="y(minHozyosenValue)" :x2="x(_.keys(Clubs).length)" :y2="y(minHozyosenValue)"
+            stroke="#000"></line>
 
           <template v-for="(club, clubIndex) in clubs" :key="club">
-
-            <line :x1="clubIndexToX(clubIndex)" :y1="y(minHozyosenValue)" :x2="clubIndexToX(clubIndex)" :y2="y(minHozyosenValue) + 5" stroke="#000">
+            <line :x1="clubIndexToX(clubIndex)" :y1="y(minHozyosenValue)" :x2="clubIndexToX(clubIndex)"
+              :y2="y(minHozyosenValue) + 5" stroke="#000">
             </line>
-            <text :x="clubIndexToX(clubIndex)" :y="y(minHozyosenValue) + 5" text-anchor="middle" font="10px &quot;Arial&quot;"
-              stroke="none" fill="#888888"
+            <text :x="clubIndexToX(clubIndex)" :y="y(minHozyosenValue) + 5" text-anchor="middle"
+              font="10px &quot;Arial&quot;" stroke="none" fill="#888888"
               style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); text-anchor: middle; font: 12px sans-serif;"
               font-size="12px" font-family="sans-serif" font-weight="normal" transform="matrix(1,0,0,1,0,9)">
               <tspan style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);" dy="4">{{ club }}</tspan>
             </text>
-
           </template>
         </g>
 
@@ -90,7 +88,7 @@ const props = defineProps<{
 
 
 // 各クラブの複数の飛距離の平均のShot[]
-const flyingDidtanceSummary = computed(() => {
+const datasSummary = computed(() => {
   const groupByClubType = _.groupBy(props.shots, shot => shot.club.clubType)
   const summaries = _.map(groupByClubType, shots => {
     const distances = _.map(shots, shot => shot.flyingDidtance.distance)
@@ -114,6 +112,28 @@ const flyingDidtanceSummary = computed(() => {
   return _.sortBy(summaries, 'clubIndex')
 })
 
+const getPathD = (xPoints: number[], yPoints: number[]) => {
+  if (_.isEmpty(xPoints) || _.isEmpty(yPoints)) {
+    console.log('getLinePathの引数の配列要素がありません。')
+    return ''
+  }
+  if (xPoints.length != yPoints.length) {
+    console.log('getLinePathの引数の配列要素数が異なります。')
+    return ''
+  }
+
+  const vxs = _.map(xPoints, xp => clubIndexToX(xp))
+  const vys = _.map(yPoints, yp => y.value(yp))
+
+  let path = `M ${vxs[0]} ${vys[0]} L `
+  for (let index = 1; index < vxs.length; index++) {
+    const x = vxs[index]
+    const y = vys[index]
+    path += `${x},${y} `
+  }
+
+  return path
+}
 
 /**
  * Y軸の補助線に関する者たち
@@ -138,7 +158,7 @@ const maxHozyosenValue = computed(() => {
   return (Math.floor(maxFlyingDistance / hozyosenStep.value) + 1) * hozyosenStep.value
 })
 const minHozyosenValue = computed(() => {
-  if(props.fromZero) return 0
+  if (props.fromZero) return 0
   const minFlyingDistance = _.min(_.map(props.shots, shot => shot.flyingDidtance.distance))
   if (!minFlyingDistance) return 0
 
@@ -155,7 +175,7 @@ const clubIndexToX = (index: number): number => {
   return x.value(index + 1)
 }
 
-const x = computed(() => d3.scaleLinear([0, _.keys(Clubs).length], [40, 420]))
+const x = computed(() => d3.scaleLinear([0, clubs.value.length], [40, 420]))
 const y = computed(() => d3.scaleLinear([minHozyosenValue.value, maxHozyosenValue.value], [376.5, 20]));
 
 
