@@ -9,32 +9,36 @@
   </div>
 
   <div style="margin-bottom: 30px;">
-    <input v-model="preferenceStore.dataType" type="radio" id="radio4" name="dataType" value="random">
-    <label for="radio4"><span class="radio-title">サンプルデータ</span></label>
+    <input @click="selectedHeader = 'Carry Flat - Length'" v-model="preferenceStore.dataType" type="radio" id="radio4"
+      name="dataType" value="random">
+    <label for="radio4"><span class="radio-title">ランダムデータ</span></label>
     <input v-model="preferenceStore.dataType" type="radio" id="radio5" name="dataType" value="custom">
-    <label for="radio5"><span class="radio-title">入力データ</span></label>
+    <label for="radio5"><span class="radio-title">csvデータ</span></label>
   </div>
 
-  <div v-if="preferenceStore.dataType == 'custom'">
+  <div>
     <label style="color: black; margin-right: 10px;">データの種類:</label>
-    <select v-model="selectedHeader" style="margin-bottom: 10px;">
+    <select v-model="selectedHeader" :disabled="preferenceStore.dataType == 'random'" style="margin-bottom: 10px;">
       <template v-for="h in hearders" :key="h">
         <option>{{ h }}</option>
       </template>
     </select>
   </div>
 
-  
   <div v-if="preferenceStore.dataType == 'custom'">
-    <label style="color: black; margin-right: 10px;">データの起点L</label>
+    <label style="color: black; margin-right: 10px;">データの起点</label>
     <select v-model="fromZero" style="margin-bottom: 10px;">
       <option :value="true">ゼロ</option>
       <option :value="false">自動</option>
     </select>
   </div>
 
+  <div style="margin: 10px;" v-if="preferenceStore.dataType == 'random'">
+    <button @click="sampleDataStore.generateShotDatas">データ更新</button>
+  </div>
+
   <div>
-    <LineChart :shots="shots" :graph-type="preferenceStore.graphType" :from-zero="fromZero" />
+    <LineChart :shots="shotData" :graph-type="preferenceStore.graphType" :from-zero="fromZero" />
   </div>
 
   <div v-if="preferenceStore.dataType == 'custom'" style="margin-top: 30px;">
@@ -61,8 +65,12 @@ const hearders = computed(() => _.keys(csvDatas.value[0] ?? {}))
 const selectedHeader = ref('Carry Flat - Length')
 const fromZero = ref(false)
 
-const shots = computed(() => {
-  if (preferenceStore.dataType == 'random') return sampleDataStore.shots
+
+const shotData = computed(() => {
+  if (preferenceStore.dataType == 'random') {
+    sampleDataStore.generateShotDatas()
+    return sampleDataStore.shots
+  }
   if (preferenceStore.dataType == 'custom') {
     csvSampleData.value = getClubAndFlyingDirectionDatasFromCsv(csvDatas.value)
     return csvSampleData.value
