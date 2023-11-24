@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { Club, Driver, EightIron, EightUtility, EightWedge, EightWood, FiveIron, FiveUtility, FiveWedge, FiveWood, FourIron, FourUtility, FourWedge, FourWood, LobWedge, NineIron, NineUtility, NineWedge, NineWood, OneIron, OneUtility, Other, PitchingWedge, Putter, SandWedge, SevenIron, SevenWedge, SevenWood, SixIron, SixUtility, SixWedge, SixWood, ThreeIron, ThreeUtility, ThreeWood, TwoIron, TwoUtility, TwoWood, } from "./club";
-import { ClubCode, ClubCsvName } from "./csvType";
+import { ClubCsvName } from "./csvType";
+import { ClubCode } from "./clubCode";
 
 
 export const clubInstances: { [K in ClubCode]: Club } = {

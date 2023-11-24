@@ -94,7 +94,7 @@ import * as d3 from 'd3'
 import { usePreferenceStore } from '../preference';
 import { Shot } from '../type/shot';
 import { Club } from '../type/club';
-import { ClubCode } from '../type/csvType';
+import { ClubCode } from '../type/clubCode';
 
 const preferenceStore = usePreferenceStore()
 const graphViewWidth = 550

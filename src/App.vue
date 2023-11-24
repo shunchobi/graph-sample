@@ -28,7 +28,24 @@
     </div>
 
     <div>
-      <Chart :shots="shotData" :from-zero="fromZero" :display-clubs="displayClubs" />
+      <Chart :shots="shotData" :from-zero="fromZero" :display-clubs="[
+          clubInstances['7WG'],
+          clubInstances['9WG'],
+          clubInstances['SW'],
+          clubInstances['PW'],
+          clubInstances['9I'],
+          clubInstances['8I'],
+          clubInstances['7I'],
+          clubInstances['6I'],
+          clubInstances['5I'],
+          clubInstances['4I'],
+          clubInstances['4UT'],
+          clubInstances['3UT'],
+          clubInstances['5W'],
+          clubInstances['2W'],
+          clubInstances['DR'],
+        ]
+        " />
     </div>
 
     <div style="margin-top: 30px;">
@@ -53,7 +70,6 @@ import { ClubCsvName, Header } from './type/csvType.ts'
 import { csvParse } from './util/parser';
 import { DataValue, Shot } from './type/shot';
 import { csvClubNameToClubCode, clubInstances } from './type/clubUtil';
-import { Club } from './type/club';
 
 const preferenceStore = usePreferenceStore()
 
@@ -103,23 +119,6 @@ const getDataFromCsv = (datas: object[]): Shot[] => {
 }
 
 
-const displayClubs: Club[] = [
-  clubInstances['7WG'],
-  clubInstances['9WG'],
-  clubInstances['SW'],
-  clubInstances['PW'],
-  clubInstances['9I'],
-  clubInstances['8I'],
-  clubInstances['7I'],
-  clubInstances['6I'],
-  clubInstances['5I'],
-  clubInstances['4I'],
-  clubInstances['4UT'],
-  clubInstances['3UT'],
-  clubInstances['5W'],
-  clubInstances['2W'],
-  clubInstances['DR'],
-]
 
 </script>
 

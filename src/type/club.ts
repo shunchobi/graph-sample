@@ -1,5 +1,7 @@
 import _ from "lodash";
-import { ClubCode, ClubCsvName, ClubJaName } from "./csvType";
+import { ClubCsvName } from "./csvType";
+import { ClubCode } from "./clubCode";
+import { ClubJaName } from "./clubJaName";
 
 
 export interface Club {
